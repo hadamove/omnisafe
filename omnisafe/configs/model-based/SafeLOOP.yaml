@@ -115,7 +115,7 @@ defaults:
     gamma: 0.99
     # cost discount factor
     cost_gamma: 0.99
-  # model configurations
+    # model configurations
     # policy buffer batch size
     policy_batch_size: 256
     # number of steps to update the policy
@@ -152,6 +152,8 @@ defaults:
     use_wandb: False
     # wandb project name
     wandb_project: omnisafe
+    # wandb entity name
+    wandb_entity: omnisafe
     # use tensorboard for logging
     use_tensorboard: True
     # save model frequency
