@@ -33,7 +33,6 @@ from rich.table import Table  # pylint: disable=wrong-import-order
 from omnisafe.utils.config import Config
 from omnisafe.utils.distributed import dist_statistics_scalar, get_rank
 
-
 # As of torch v1.9.0, torch.utils.tensorboard has a bug that is exposed by setuptools 59.6.0.  The
 # bug is that it attempts to import distutils then access distutils.version without actually
 # importing distutils.version.  We can workaround this by prepopulating the distutils.version
@@ -84,7 +83,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         self,
         output_dir: str,
         exp_name: str,
-        output_fname: str = 'progress.csv',
+        output_fname: str = "progress.csv",
         seed: int = 0,
         use_tensorboard: bool = True,
         use_wandb: bool = False,
@@ -92,11 +91,11 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         models: list[torch.nn.Module] | None = None,
     ) -> None:
         """Initialize an instance of :class:`Logger`."""
-        hms_time = time.strftime('%Y-%m-%d-%H-%M-%S', time.localtime())
+        hms_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
         relpath = hms_time
 
         if seed is not None:
-            relpath = f'seed-{str(seed).zfill(3)}-{relpath}'
+            relpath = f"seed-{str(seed).zfill(3)}-{relpath}"
 
         self._hms_time: str = hms_time
         self._log_dir: str = os.path.join(output_dir, exp_name, relpath)
@@ -107,11 +106,11 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             os.makedirs(self._log_dir, exist_ok=True)
             self._output_file: TextIO = open(  # noqa: SIM115 # pylint: disable=consider-using-with
                 os.path.join(self._log_dir, output_fname),
-                encoding='utf-8',
-                mode='w',
+                encoding="utf-8",
+                mode="w",
             )
             atexit.register(self._output_file.close)
-            self.log(f'Logging data to {self._output_file.name}', 'cyan', bold=True)
+            self.log(f"Logging data to {self._output_file.name}", "cyan", bold=True)
             self._csv_writer = csv.writer(self._output_file)
 
         self._epoch: int = 0
@@ -131,20 +130,29 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         self._use_wandb: bool = use_wandb
 
         if self._use_tensorboard and self._maste_proc:
-            self._tensorboard_writer = SummaryWriter(log_dir=os.path.join(self._log_dir, 'tb'))
+            self._tensorboard_writer = SummaryWriter(
+                log_dir=os.path.join(self._log_dir, "tb")
+            )
 
         if self._use_wandb and self._maste_proc:  # pragma: no cover
-            project: str = self._config.logger_cfgs.get('wandb_project', 'omnisafe')
-            name: str = f'{exp_name}-{relpath}'
-            print('project', project, 'name', name)
-            wandb.init(project=project, name=name, dir=self._log_dir, config=config)
+            project: str = self._config.logger_cfgs.get("wandb_project", "omnisafe")
+            entity: str = self._config.logger_cfgs.get("wandb_entity", "omnisafe")
+            name: str = f"{exp_name}-{relpath}"
+            print("project", project, "name", name)
+            wandb.init(
+                project=project,
+                entity=entity,
+                name=name,
+                dir=self._log_dir,
+                config=config,
+            )
             if config is not None:
                 wandb.config.update(config)
             if models is not None:
                 for model in models:
                     wandb.watch(model)
 
-    def log(self, msg: str, color: str = 'green', bold: bool = False) -> None:
+    def log(self, msg: str, color: str = "green", bold: bool = False) -> None:
         """Log the message to the console and the file.
 
         Args:
@@ -153,7 +161,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             bold (bool, optional): Whether the message is bold. Defaults to False.
         """
         if self._maste_proc:
-            style = ' '.join([color, 'bold' if bold else ''])
+            style = " ".join([color, "bold" if bold else ""])
             self._console.print(msg, style=style)
 
     def save_config(self, config: Config) -> None:
@@ -163,8 +171,10 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             config (Config): The configuration to be saved.
         """
         if self._maste_proc:
-            self.log('Save with config in config.json', 'yellow', bold=True)
-            with open(os.path.join(self._log_dir, 'config.json'), encoding='utf-8', mode='w') as f:
+            self.log("Save with config in config.json", "yellow", bold=True)
+            with open(
+                os.path.join(self._log_dir, "config.json"), encoding="utf-8", mode="w"
+            ) as f:
                 f.write(config.tojson())
 
     def setup_torch_saver(self, what_to_save: dict[str, Any]) -> None:
@@ -178,12 +188,12 @@ class Logger:  # pylint: disable=too-many-instance-attributes
     def torch_save(self) -> None:
         """Save the torch model."""
         if self._maste_proc:
-            assert self._what_to_save is not None, 'Please setup torch saver first'
-            path = os.path.join(self._log_dir, 'torch_save', f'epoch-{self._epoch}.pt')
+            assert self._what_to_save is not None, "Please setup torch saver first"
+            path = os.path.join(self._log_dir, "torch_save", f"epoch-{self._epoch}.pt")
             os.makedirs(os.path.dirname(path), exist_ok=True)
 
             params = {
-                k: v.state_dict() if hasattr(v, 'state_dict') else v
+                k: v.state_dict() if hasattr(v, "state_dict") else v
                 for k, v in self._what_to_save.items()
             }
             torch.save(params, path)
@@ -216,25 +226,25 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             min_and_max (bool, optional): Whether to record the min and max value. Defaults to False.
             delta (bool, optional): Whether to record the delta value. Defaults to False.
         """
-        assert key not in self._current_row, f'Key {key} has been registered'
+        assert key not in self._current_row, f"Key {key} has been registered"
         self._current_row[key] = 0
         if min_and_max:
-            self._current_row[f'{key}/Min'] = 0
-            self._current_row[f'{key}/Max'] = 0
-            self._current_row[f'{key}/Std'] = 0
+            self._current_row[f"{key}/Min"] = 0
+            self._current_row[f"{key}/Max"] = 0
+            self._current_row[f"{key}/Std"] = 0
             self._headers_minmax[key] = True
-            self._headers_minmax[f'{key}/Min'] = False
-            self._headers_minmax[f'{key}/Max'] = False
-            self._headers_minmax[f'{key}/Std'] = False
+            self._headers_minmax[f"{key}/Min"] = False
+            self._headers_minmax[f"{key}/Max"] = False
+            self._headers_minmax[f"{key}/Std"] = False
 
         else:
             self._headers_minmax[key] = False
 
         if delta:
-            self._current_row[f'{key}/Delta'] = 0
+            self._current_row[f"{key}/Delta"] = 0
             self._headers_delta[key] = True
-            self._headers_delta[f'{key}/Delta'] = False
-            self._headers_minmax[f'{key}/Delta'] = False
+            self._headers_delta[f"{key}/Delta"] = False
+            self._headers_minmax[f"{key}/Delta"] = False
         else:
             self._headers_delta[key] = False
 
@@ -266,7 +276,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         if data is not None:
             kwargs.update(data)
         for key, val in kwargs.items():
-            assert key in self._current_row, f'Key {key} has not been registered'
+            assert key in self._current_row, f"Key {key} has not been registered"
             if isinstance(val, (int, float)):
                 self._data[key].append(val)
             elif isinstance(val, torch.Tensor):
@@ -274,7 +284,7 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             elif isinstance(val, np.ndarray):
                 self._data[key].append(val.mean())
             else:
-                raise ValueError(f'Unsupported type {type(val)}')
+                raise ValueError(f"Unsupported type {type(val)}")
 
     def dump_tabular(self) -> None:
         """Dump the tabular data to the console and the file.
@@ -287,14 +297,14 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         - Update the progress logger.
         """
         self._update_current_row()
-        table = Table('Metrics', 'Value')
+        table = Table("Metrics", "Value")
         if self._maste_proc:
             self._epoch += 1
             key_lens = list(map(len, self._current_row.keys()))
             max_key_len = max(15, *key_lens)
             for key, val in self._current_row.items():
                 if self._headers_minmax[key]:
-                    table.add_row(f'{key}/Mean'[:max_key_len], str(val)[:max_key_len])
+                    table.add_row(f"{key}/Mean"[:max_key_len], str(val)[:max_key_len])
                 else:
                     table.add_row(key[:max_key_len], str(val)[:max_key_len])
 
@@ -306,7 +316,9 @@ class Logger:  # pylint: disable=too-many-instance-attributes
 
             if self._use_tensorboard:
                 for key, val in self._current_row.items():
-                    self._tensorboard_writer.add_scalar(key, val, global_step=self._epoch)
+                    self._tensorboard_writer.add_scalar(
+                        key, val, global_step=self._epoch
+                    )
                 self._tensorboard_writer.flush()
 
             if self._use_wandb:
@@ -323,15 +335,15 @@ class Logger:  # pylint: disable=too-many-instance-attributes
             if self._headers_minmax[key]:
                 mean, min_val, max_val, std = self.get_stats(key, True)
                 self._current_row[key] = mean
-                self._current_row[f'{key}/Min'] = min_val
-                self._current_row[f'{key}/Max'] = max_val
-                self._current_row[f'{key}/Std'] = std
+                self._current_row[f"{key}/Min"] = min_val
+                self._current_row[f"{key}/Max"] = max_val
+                self._current_row[f"{key}/Std"] = std
             else:
                 mean = self.get_stats(key, False)[0]
                 self._current_row[key] = mean
 
             if self._headers_delta[key]:
-                self._current_row[f'{key}/Delta'] = mean - old_data
+                self._current_row[f"{key}/Delta"] = mean - old_data
 
             if self._headers_windows[key] is None:
                 self._data[key] = []
@@ -351,20 +363,20 @@ class Logger:  # pylint: disable=too-many-instance-attributes
         Returns:
             The mean value of the key or (mean, min, max, std) of the key.
         """
-        assert key in self._current_row, f'Key {key} has not been registered'
+        assert key in self._current_row, f"Key {key} has not been registered"
         vals = self._data[key]
         if isinstance(vals, deque):
             vals = list(vals)
 
         if min_and_max:
             mean, std, min_val, max_val = dist_statistics_scalar(
-                torch.tensor(vals).to(os.getenv('OMNISAFE_DEVICE', 'cpu')),
+                torch.tensor(vals).to(os.getenv("OMNISAFE_DEVICE", "cpu")),
                 with_min_and_max=True,
             )
             return mean.item(), min_val.mean().item(), max_val.mean().item(), std.item()
 
         mean, std = dist_statistics_scalar(  # pylint: disable=unbalanced-tuple-unpacking
-            torch.tensor(vals).to(os.getenv('OMNISAFE_DEVICE', 'cpu')),
+            torch.tensor(vals).to(os.getenv("OMNISAFE_DEVICE", "cpu")),
         )
         return (mean.item(),)
 
