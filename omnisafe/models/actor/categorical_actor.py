@@ -129,3 +129,17 @@ class CategoricalActor(Actor):
         assert self._after_inference, 'log_prob() should be called after predict() or forward()'
         self._after_inference = False
         return self._current_dist.log_prob(act.squeeze())
+
+    def probabilities(self) -> torch.Tensor:
+        """Get the probabilities of all actions given the current distribution.
+
+        .. warning::
+            You must call :meth:`forward` or :meth:`predict` before calling this method.
+
+        Returns:
+            Probabilities of all actions. Shape: (batch_size, num_actions).
+        """
+        assert self._after_inference, (
+            "probabilities() should be called after predict() or forward()"
+        )
+        return self._current_dist.probs
