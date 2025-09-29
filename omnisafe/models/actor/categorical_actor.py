@@ -130,16 +130,14 @@ class CategoricalActor(Actor):
         self._after_inference = False
         return self._current_dist.log_prob(act.squeeze())
 
-    def probabilities(self) -> torch.Tensor:
-        """Get the probabilities of all actions given the current distribution.
+    def probabilities(self, obs: torch.Tensor) -> torch.Tensor:
+        """Get the probabilities of all actions for the given observations.
 
-        .. warning::
-            You must call :meth:`forward` or :meth:`predict` before calling this method.
+        Args:
+            obs (torch.Tensor): Observation from environments.
 
         Returns:
             Probabilities of all actions. Shape: (batch_size, num_actions).
         """
-        assert self._after_inference, (
-            "probabilities() should be called after predict() or forward()"
-        )
-        return self._current_dist.probs
+        dist = self._distribution(obs)
+        return dist.probs
