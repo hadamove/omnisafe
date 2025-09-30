@@ -66,7 +66,21 @@ class SAC(DDPG):
         """
         super()._init()
         if self._cfgs.algo_cfgs.auto_alpha:
-            self._target_entropy = -torch.prod(torch.Tensor(self._env.action_space.shape)).item()
+            # target entropy depends on action space
+            if (
+                hasattr(self._env.action_space, "shape")
+                and self._env.action_space.shape is not None
+            ):
+                self._target_entropy = -torch.prod(
+                    torch.Tensor(self._env.action_space.shape)
+                ).item()
+            else:
+                # Discrete: use -log(|A|) so that uniform policy matches target
+                try:
+                    n_actions = float(self._env.action_space.n)
+                    self._target_entropy = -torch.log(torch.tensor(n_actions)).item()
+                except Exception:  # pylint: disable=broad-except
+                    self._target_entropy = -1.0
             self._log_alpha = torch.zeros(1, requires_grad=True, device=self._device)
 
             assert self._cfgs.model_cfgs.critic.lr is not None

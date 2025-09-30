@@ -874,6 +874,7 @@ Configs
 
             - use_wandb (bool): Whether to use wandb to log the training process.
             - wandb_project (str): The name of wandb project.
+            - wandb_entity (str): The name of wandb entity.
             - use_tensorboard (bool): Whether to use tensorboard to log the training process.
             - log_dir (str): The directory to save the log files.
             - window_lens (int): The length of the window to calculate the average reward.

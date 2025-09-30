@@ -114,6 +114,8 @@ defaults:
     use_wandb: False
     # wandb project name
     wandb_project: omnisafe
+    # wandb entity name
+    wandb_entity: omnisafe
     # use tensorboard for logging
     use_tensorboard: True
     # save model frequency
@@ -122,7 +124,6 @@ defaults:
     log_dir: "./runs"
     # save model path
     window_lens: 100
-
 
 SafetyAntVelocity-v1:
   algo_cfgs:
