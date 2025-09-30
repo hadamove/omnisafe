@@ -283,23 +283,26 @@ def __check_env_configs(configs: Config, env_type: str) -> None:
             configs.model_cfgs.actor_type == 'discrete'
         ), 'Discrete environments only support discrete actor!'
         assert configs.algo in [
-            'NaturalPG',
-            'PolicyGradient',
-            'PPO',
-            'TRPO',
-            'RCPO',
-            'PDO',
-            'PPOLag',
-            'TRPOLag',
-            'OnCRPO',
-            'P3O',
-            'IPO',
-            'CPPOPID',
-            'TRPOPID',
-            'CPO',
-            'PCPO',
-        ], f'Currently, OmniSafe does not support {configs.algo} running on discrete environments!'
-    if env_type == 'box':
+            "NaturalPG",
+            "PolicyGradient",
+            "PPO",
+            "TRPO",
+            "RCPO",
+            "PDO",
+            "PPOLag",
+            "TRPOLag",
+            "OnCRPO",
+            "P3O",
+            "IPO",
+            "CPPOPID",
+            "TRPOPID",
+            "CPO",
+            "PCPO",
+            "SAC",
+            "SACLag",
+            "SACPID",
+        ], f"Currently, OmniSafe does not support {configs.algo} running on discrete environments!"
+    if env_type == "box":
         assert (
             configs.model_cfgs.actor_type != 'discrete'
         ), 'Box environments do not support discrete actor!'

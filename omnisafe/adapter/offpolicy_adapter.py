@@ -126,9 +126,7 @@ class OffPolicyAdapter(OnlineAdapter):
         """
         for _ in range(rollout_step):
             if use_rand_action:
-                act = torch.as_tensor(self._env.sample_action(), dtype=torch.float32).to(
-                    self._device,
-                )
+                act = torch.as_tensor(self._env.sample_action()).to(self._device)
             else:
                 act = agent.step(self._current_obs, deterministic=False)
             next_obs, reward, cost, terminated, truncated, info = self.step(act)
@@ -144,7 +142,7 @@ class OffPolicyAdapter(OnlineAdapter):
 
             buffer.store(
                 obs=self._current_obs,
-                act=act,
+                act=act.to(torch.float32),
                 reward=reward,
                 cost=cost,
                 done=torch.logical_and(terminated, torch.logical_xor(terminated, truncated)),

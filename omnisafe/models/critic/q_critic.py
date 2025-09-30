@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from gymnasium import spaces
 
 from omnisafe.models.base import Critic
 from omnisafe.typing import Activation, InitFunction, OmnisafeSpace
@@ -65,8 +67,8 @@ class QCritic(Critic):
         obs_space: OmnisafeSpace,
         act_space: OmnisafeSpace,
         hidden_sizes: list[int],
-        activation: Activation = 'relu',
-        weight_initialization_mode: InitFunction = 'kaiming_uniform',
+        activation: Activation = "relu",
+        weight_initialization_mode: InitFunction = "kaiming_uniform",
         num_critics: int = 1,
         use_obs_encoder: bool = False,
     ) -> None:
@@ -103,7 +105,7 @@ class QCritic(Critic):
                 )
                 critic = nn.Sequential(net)
             self.net_lst.append(critic)
-            self.add_module(f'critic_{idx}', critic)
+            self.add_module(f"critic_{idx}", critic)
 
     def forward(
         self,
@@ -124,10 +126,21 @@ class QCritic(Critic):
             A list of Q critic values of action and observation pair.
         """
         res = []
+        # Convert discrete action indices to one-hot vectors for concatenation
+        if isinstance(self._act_space, spaces.Discrete):
+            # Ensure integer indices and remove trailing singleton action dim if present
+            act_index = act.long()
+            if act_index.ndim > 0 and act_index.shape[-1] == 1:
+                act_index = act_index.squeeze(-1)
+            # one-hot over the last dimension, preserving any leading batch dims
+            one_hot = F.one_hot(act_index, num_classes=self._act_dim).to(dtype=obs.dtype)
+            act_input = one_hot
+        else:
+            act_input = act
         for critic in self.net_lst:
             if self._use_obs_encoder:
                 obs_encode = critic[0](obs)
-                res.append(torch.squeeze(critic[1](torch.cat([obs_encode, act], dim=-1)), -1))
+                res.append(torch.squeeze(critic[1](torch.cat([obs_encode, act_input], dim=-1)), -1))
             else:
-                res.append(torch.squeeze(critic(torch.cat([obs, act], dim=-1)), -1))
+                res.append(torch.squeeze(critic(torch.cat([obs, act_input], dim=-1)), -1))
         return res

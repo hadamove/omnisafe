@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import torch
-from gymnasium.spaces import Box
+from gymnasium.spaces import Box, Discrete
 
 from omnisafe.common.buffer.offpolicy_buffer import OffPolicyBuffer
 from omnisafe.typing import DEVICE_CPU, OmnisafeSpace
@@ -82,6 +82,13 @@ class VectorOffPolicyBuffer(OffPolicyBuffer):
         if isinstance(act_space, Box):
             act_buf = torch.zeros(
                 (size, num_envs, *act_space.shape),
+                dtype=torch.float32,
+                device=device,
+            )
+        elif isinstance(act_space, Discrete):
+            # store discrete action indices with an explicit singleton action-dim
+            act_buf = torch.zeros(
+                (size, num_envs, 1),
                 dtype=torch.float32,
                 device=device,
             )
